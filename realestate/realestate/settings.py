@@ -17,10 +17,10 @@ NEWSPIDER_MODULE = "realestate.spiders"
 #USER_AGENT = "realestate (+http://www.yourdomain.com)"
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = False
+ROBOTSTXT_OBEY = True
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-#CONCURRENT_REQUESTS = 32
+CONCURRENT_REQUESTS = 1
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
@@ -62,9 +62,9 @@ ROBOTSTXT_OBEY = False
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    "realestate.pipelines.RealestatePipeline": 300,
-#}
+ITEM_PIPELINES = {
+   "realestate.pipelines.RealestatePipeline": 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
@@ -95,7 +95,7 @@ FEED_EXPORT_ENCODING = "utf-8"
 #Splash
 # settings.py
 
-SPLASH_URL = 'http://localhost:8050/'  # Splash instance URL
+SPLASH_URL = 'http://localhost:8050/execute'  # Splash instance URL
 DOWNLOADER_MIDDLEWARES = {
     'scrapy_splash.SplashCookiesMiddleware': 723,
     'scrapy_splash.SplashMiddleware': 725,
