@@ -4,27 +4,29 @@ from scrapy_splash import SplashRequest
 class AgentSpider(scrapy.Spider):
     name = 'agents'
     script = """
-        function main(splash,args)
-            local num_scrolls = 10
-            local scroll_delay = 1
+        function main(splash, args)
+            splash.images_enabled = false
+            splash:go(args.url)
+            splash:wait(2)
+            local previous_height = 0
+            local current_height = splash:evaljs("document.body.scrollHeight")
+            local max_scrolls = 35
+            local scrolls = 0
             
-            local scroll_to = splash:jsfunc("window.scrollTo")
-            local get_body_height = splash:jsfunc(
-                "function() {return document.body.scrollHeight;}"
-            )
-            assert(splash:go(splash.args.url))
-            splash:wait(splash.args.wait)
-            
-            for _ = 1, num_scrolls do
-                scroll_to(0, get_body_height())
-                splash:wait(scroll_delay)
-            end        
+            -- simulate scrolling
+            while scrolls < max_scrolls and current_height > previous_height do
+                previous_height = current_height
+                splash:runjs("window.scrollTo(0, document.body.scrollHeight);")
+                splash:wait(2)
+                current_height = splash:evaljs("document.body.scrollHeight")
+                scrolls = scrolls + 1
+            end
             return splash:html()
         end
         """
     def start_requests(self):
         url= 'https://www.bhhsamb.com/roster/Agents'
-        yield SplashRequest(url=url,callback=self.parse,endpoint='execute',args={'lua_source':self.script,'wait':10000000})
+        yield SplashRequest(url=url,callback=self.parse,endpoint='execute',args={'lua_source':self.script,'timeout':90})
     def parse(self, response):
         profile_links=response.css('a.cms-int-roster-card-image-container.site-roster-card-image-link::attr(href)').getall()
         for links in profile_links:
@@ -37,7 +39,10 @@ class AgentSpider(scrapy.Spider):
         address=profile.css('ul.rng-agent-profile-contact li.rng-agent-profile-contact-address::text').getall()
         address="".join(address).strip()
         phone=profile.css('ul.rng-agent-profile-contact li.rng-agent-profile-contact-phone a::text').get()
-        phone=phone.strip()
+        if phone:
+            phone=phone.strip()
+        else:
+            phone=None
         website=profile.css('ul.rng-agent-profile-contact li.rng-agent-profile-contact-website a::attr(href)').get()
         email=profile.css('ul.rng-agent-profile-contact li.rng-agent-profile-contact-email a::attr(href)').get()
         description=profile.css('article.rng-agent-profile-content div p::text').get()
