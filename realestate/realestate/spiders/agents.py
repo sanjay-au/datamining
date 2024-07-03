@@ -1,5 +1,8 @@
 import scrapy
 from scrapy_splash import SplashRequest
+from scrapy import Request
+from scrapy.selector import Selector
+from scrapy.http import JsonRequest
 
 class AgentSpider(scrapy.Spider):
     name = 'agents'
@@ -7,26 +10,27 @@ class AgentSpider(scrapy.Spider):
         function main(splash, args)
             splash.images_enabled = false
             splash:go(args.url)
-            splash:wait(2)
-            local previous_height = 0
-            local current_height = splash:evaljs("document.body.scrollHeight")
-            local max_scrolls = 35
+            splash:wait(5)
+        
             local scrolls = 0
-            
-            -- simulate scrolling
-            while scrolls < max_scrolls and current_height > previous_height do
-                previous_height = current_height
+            local max_scrolls = 100
+            local scroll_delay = 5
+        
+            while scrolls < max_scrolls do
                 splash:runjs("window.scrollTo(0, document.body.scrollHeight);")
-                splash:wait(2)
-                current_height = splash:evaljs("document.body.scrollHeight")
+                splash:wait(scroll_delay)
                 scrolls = scrolls + 1
             end
-            return splash:html()
+        
+            return {
+                html = splash:html(),
+                url = splash:url()
+            }
         end
         """
     def start_requests(self):
         url= 'https://www.bhhsamb.com/roster/Agents'
-        yield SplashRequest(url=url,callback=self.parse,endpoint='execute',args={'lua_source':self.script,'timeout':90})
+        yield SplashRequest(url=url,callback=self.parse,endpoint='execute',args={'lua_source':self.script,'timeout':3000})
     def parse(self, response):
         profile_links=response.css('a.cms-int-roster-card-image-container.site-roster-card-image-link::attr(href)').getall()
         for links in profile_links:
